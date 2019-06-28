@@ -10,7 +10,7 @@ import com.dbmigparser.utils.ChangeLog;
 
 public abstract class BlockTranslator extends RuleBase {
 
-	public abstract String translateQuery(String sqlCode);
+	public abstract List<String> translateQuery(String sqlCode);
 
 	@Override
 	public List<String> applyRule(List<String> sqlCode) {
@@ -21,13 +21,13 @@ public abstract class BlockTranslator extends RuleBase {
 		for (String currLine : sqlCode) {
 			if (currLine.startsWith("=====")) {
 				if (query.length() > 0)
-					newSqlCode.add(translateQuery(query.toString()));
+					newSqlCode.addAll(translateQuery(query.toString()));
 				changes.logChange("Translate Query # " + queryNum + " : " + query.toString());
 				query.setLength(0);
 				queryNum++;
 			} else if (currLine.endsWith(";")) {
 				query.append(currLine.trim());
-				newSqlCode.add(translateQuery(query.toString()));
+				newSqlCode.addAll(translateQuery(query.toString()));
 				changes.logChange("Translate Query # " + queryNum + " : " + query.toString());
 				query.setLength(0);
 				queryNum++;
@@ -37,7 +37,7 @@ public abstract class BlockTranslator extends RuleBase {
 			}
 		}
 		if (query.length() > 0) {
-			newSqlCode.add(translateQuery(query.toString()));
+			newSqlCode.addAll(translateQuery(query.toString()));
 			changes.logChange("Translate Query # " + queryNum + " : " + query.toString());
 		}
 		return newSqlCode;
