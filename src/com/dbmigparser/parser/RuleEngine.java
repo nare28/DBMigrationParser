@@ -2,7 +2,9 @@ package com.dbmigparser.parser;
 
 import java.util.List;
 
+import com.dbmigparser.dbblockparser.MergeTranslator;
 import com.dbmigparser.dbblockparser.PivotTranslator;
+import com.dbmigparser.dbblockparser.SelfDmlTranslator;
 import com.dbmigparser.dblineparser.AddNewLines;
 import com.dbmigparser.dblineparser.CodeIndentation;
 import com.dbmigparser.dblineparser.EndStmtWithColon;
@@ -61,9 +63,16 @@ public class RuleEngine {
 			ruleTool = new AddNewLines();
 			break;
 		// Line Parser Rules Ended
+			
 		// Block Parser Rules Started
 		case "pivot-trans":
 			ruleTool = new PivotTranslator();
+			break;
+		case "self-dml":
+			ruleTool = new SelfDmlTranslator();
+			break;
+		case "merge-trans":
+			ruleTool = new MergeTranslator();
 			break;
 		// Block Parser Rules Ended
 		default:

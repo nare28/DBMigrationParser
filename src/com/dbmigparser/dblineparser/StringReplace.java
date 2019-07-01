@@ -17,6 +17,8 @@ public class StringReplace extends RuleBase {
 		int linePos = 1;
 		for (String currLine : sqlCode) {
 			for (int i = 0; i < STR_REPLACE.length; i++) {
+				
+				
 				if(currLine.contains(STR_REPLACE[i][0])) {
 					currLine = currLine.replace(STR_REPLACE[i][0], STR_REPLACE[i][1]);
 					changes.logChange("Replaced keyword '" + STR_REPLACE[i][0] 

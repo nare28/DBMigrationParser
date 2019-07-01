@@ -14,15 +14,10 @@ import java.util.List;
 
 import com.dbmigparser.utils.ChangeLog;
 
-public class DBRuleParser {
+public abstract class DBRuleParser {
 
 	private ChangeLog changes = null;
-	private String config = null;
 	
-	public DBRuleParser(String config) {
-		this.config = config;
-	}
-
 	public void process(String srcDirPath, String outDirPath, String fileName) {
 		changes = ChangeLog.getInstance();
 		// If File Name not passed, consider it as directory
@@ -55,14 +50,7 @@ public class DBRuleParser {
 			return;
 		}
 		
-		// Read File Content
-		List<String> sqlCode = readFile(file);
-		String[] rules = config.split(",");
-		RuleEngine re = null;
-		for(String rl: rules) {
-			re = new RuleEngine(rl);
-			sqlCode = re.execute(sqlCode);
-		}
+		List<String> sqlCode = applyRules(file);
 		
 		changes.logLine();
 		printNewFile(sqlCode, outDirPath + FILE_PREFIX + file.getName());
@@ -72,6 +60,8 @@ public class DBRuleParser {
 		printNewFile(changes.getChanges(), outDirPath + FILE_PREFIX + "change_log.txt");
 //		changes.printLog();
 	}
+
+	public abstract List<String> applyRules(File file);
 	
 	public void printNewFile(List<String> changes, String outFile) {
 		FileWriter fw = null;
