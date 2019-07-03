@@ -18,6 +18,12 @@ public abstract class DBRuleParser {
 
 	private ChangeLog changes = null;
 	
+	protected String rulesConfig = null;
+	
+	public DBRuleParser(String rulesConfig) {
+		this.rulesConfig = rulesConfig;
+	}
+	
 	public void process(String srcDirPath, String outDirPath, String fileName) {
 		changes = ChangeLog.getInstance();
 		// If File Name not passed, consider it as directory

@@ -7,7 +7,7 @@ public class Constants {
 	
 	public static final String BLOCK_PARSER_CFG_RULES = "self-dml,pivot-trans,merge-trans";
 	
-
+	public static final String COMMENT_KEY = "tm__c#";
 	public static final String BLANK = "";
 	public static final String SPACE = " ";
 	public static final String TAB_SPACE = "    ";
@@ -18,10 +18,6 @@ public class Constants {
 	
 	public static final int MAX_LINE_CHARS = 100;
 	public static final int MAX_TOKEN_CHARS = 60;
-	
-	public static final String SOURCE_DIR = "/Users/nanarah/SCT_Test/SQLServer/";
-	public static final String OUT_DIR = "/Users/nanarah/SCT_Test/PG/";
-	public static final String FILE_NAME = "untranslated2.sql";
 	
 	public static final String STR_REPLACE[][] = {
 			{" NUMERIC(10, 0)", " INTEGER"},
