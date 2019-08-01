@@ -1,0 +1,49 @@
+let queryTrans = '[' +
+'{"source" : "sql", "target" : "pg", ' +
+'	"mappers":[' +
+'		{ ' +
+'		"src" : "UPDATE $#UpdateTable| SET $#SetCmd| FROM $#FromTable| AS $#FromAlias| INNER_JOIN $#JoinTable| AS $#JoinAlias| ON $#JoinFilter| INNER_JOIN $#OtherJoins| WHERE $#WhereFilter", ' +
+'		"tgt" : "UPDATE #UpdateTable| AS #FromAlias <nlnt>|SET #SetCmd <nl>|FROM #JoinTable| AS #JoinAlias <nl>|#OtherJoins <nl>|WHERE #WhereFilter <nlnt>|AND #JoinFilter" '+
+'		}'	+	
+'		, { ' +
+'		"src" : "UPDATE $#UpdateTable| SET $#SetCmd| FROM $#FromTable| AS $#FromAlias| INNER_JOIN $#JoinTable| AS $#JoinAlias| ON $#JoinFilter| INNER_JOIN $#OtherJoins| WHERE $#WhereFilter", ' +
+'		"tgt" : "UPDATE #UpdateTable| AS #FromAlias <dnl><dnt>|SET #SetCmd <nl>|FROM #JoinTable| AS #JoinAlias <nl>|#OtherJoins <nl>|WHERE #WhereFilter <nlnt>|AND #JoinFilter" '+
+'		}'	+	
+'		, { ' +
+'		"src" : "SELECT gimbd_tkna1=gimbd_tknb1 | FROM gimbd_tkn2", ' +
+'		"tgt" : "SELECT gimbd_tkna1=gimbd_tknb1 | FROM gimbd_tkn2" '+
+'		}'	+	
+'	]},' +
+'{"source" : "pg", "target" : "pg", ' +
+'	"strreplace":[' +
+'		{"src" : " COUNT(*) ", "tgt" : " COUNT(1) "}, '	+
+'		{"src" : "\'1\'", "tgt" : "TRUE"}, '	+
+'		{"src" : "\'0\'", "tgt" : "FALSE"} '	+
+'    ], '+
+'	"mappers":[' +
+'		{ ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6", ' +
+'		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>WHERE gimbd_tkn6" '+
+'		}'	+	
+'		, { ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 WHERE gimbd_tkn7", ' +
+'		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>WHERE gimbd_tkn7 <dnl><dnt>AND gimbd_tkn6" '+
+'		}'	+	
+'		, { ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8", ' +
+'		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>gimbd_tkn7 gimbd_tkn8 <dnl>WHERE gimbd_tkn6" '+
+'		}'	+	
+'		, { ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8 WHERE gimbd_tkn9", ' +
+'		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 gimbd_tkn7 gimbd_tkn8 <dnl>WHERE gimbd_tkn9 <dnl><dnt>AND gimbd_tkn6" '+
+'		}'	+	
+'	]}' +
+']';
+
+/*
+UPDATE table_4_a SET schedulecount = COALESCE(b.schedulecount, 0), dep = 20 FROM table_4_a AS a INNER_JOIN table_4_b AS b ON a.empid = b.employeeid INNER_JOIN table_4_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL
+
+UPDATE $#UpdateTable| SET $#SetCmd| FROM $#FromTable| AS $#FromAlias| INNER_JOIN | $#JoinTable| AS $#JoinAlias| ON $#JoinFilter| INNER_JOIN | $#OtherJoins| WHERE $#WhereFilter
+
+*/
+

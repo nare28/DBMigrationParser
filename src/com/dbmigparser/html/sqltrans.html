@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>HTML5 Introduction</title>
+<meta charset="utf-8">
+<title>SQL Translater</title>
+<script type="text/javascript" src="./sqlmappers.json"></script>
+<script type="text/javascript" src="./sqlmappers.js"></script>
+<script type="text/javascript">
+function initPage() {
+	document.getElementById("srcDB").innerHTML='pg';
+	document.getElementById("tgtDB").innerHTML='pg';
+}
+</script>
+<head>
+<body bgcolor="lightgreen" onload="initPage();">
+<h2>Query Translator</h2>
+<form name="DBMigrationForm">
+<table>
+<tr><td><b>Source : <span id="srcDB"></span></b></td>
+<td></td>
+<td><b>Target : <span id="tgtDB"></span></b></td>
+</tr>
+<tr>
+<td>	
+	<textarea name="source" id="source" cols="70" rows="15"></textarea>
+</td>
+<td>
+</td>
+<td>
+	<textarea name="target" id="target" cols="70" rows="15"></textarea>
+</td>
+</tr>
+<tr>
+<td>
+	<input type="button" value="Translate" onclick="translateQuery(this.form);"/>
+	<select name="dbmigtypes" id="dbmigtypes" onchange="selectMigDbs(this.form);">
+		<option value='pg-pg' selected>PostgreSQL==>PostgreSQL</option>
+		<option value='sql-pg'>SQLServer==>PostgreSQL</option>
+		<option value='ora-pg'>Oracle==>PostgreSQL</option>
+		<option value='mysql-pg'>MySQL==>PostgreSQL</option>
+	</select>
+</td>
+<td></td>
+<td>
+  <input type="button" value="Save" onclick="saveQuery(this.form);"/>
+  <input type="reset" value="Reset" />
+</td>
+</tr>
+</table>
+</form>
+</body>
+</html>
