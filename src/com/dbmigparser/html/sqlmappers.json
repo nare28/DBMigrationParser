@@ -24,18 +24,34 @@ let queryTrans = '[' +
 '		{ ' +
 '		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6", ' +
 '		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>WHERE gimbd_tkn6" '+
-'		}'	+	
-'		, { ' +
+'		}, '	+	
+'		{ ' +
 '		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 WHERE gimbd_tkn7", ' +
 '		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>WHERE gimbd_tkn7 <dnl><dnt>AND gimbd_tkn6" '+
-'		}'	+	
-'		, { ' +
-'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8", ' +
+'		}, '	+	
+'		{ ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|LEFT_OUTER_JOIN|RIGHT_OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8", ' +
 '		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 <dnl>gimbd_tkn7 gimbd_tkn8 <dnl>WHERE gimbd_tkn6" '+
-'		}'	+	
-'		, { ' +
-'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8 WHERE gimbd_tkn9", ' +
+'		}, '	+	
+'		{ ' +
+'		"src" : "UPDATE gimbd_tkn1 SET gimbd_tkn2 FROM gimbd_tkn1 AS gimbd_tkn3 INNER_JOIN gimbd_tkn4 AS gimbd_tkn5 ON gimbd_tkn6 (INNER_JOIN|LEFT_OUTER_JOIN|RIGHT_OUTER_JOIN)::gimbd_tkn7 gimbd_tkn8 WHERE gimbd_tkn9", ' +
 '		"tgt" : "UPDATE gimbd_tkn1 AS gimbd_tkn3 <dnl><dnt>SET gimbd_tkn2 <dnl>FROM gimbd_tkn4 AS gimbd_tkn5 gimbd_tkn7 gimbd_tkn8 <dnl>WHERE gimbd_tkn9 <dnl><dnt>AND gimbd_tkn6" '+
+'		}, '	+	
+'		{ ' +
+'		"src" : "DELETE_FROM gimbd_tkn1 USING gimbd_tkn1 AS gimbd_tkn2 INNER_JOIN gimbd_tkn3 AS gimbd_tkn4 ON gimbd_tkn5", ' +
+'		"tgt" : "DELETE FROM gimbd_tkn1 AS gimbd_tkn2 <dnl>USING gimbd_tkn3 AS gimbd_tkn4 <dnl>WHERE gimbd_tkn5" '+
+'		}, '	+	
+'		{ ' +
+'		"src" : "DELETE_FROM gimbd_tkn1 USING gimbd_tkn1 AS gimbd_tkn2 INNER_JOIN gimbd_tkn3 AS gimbd_tkn4 ON gimbd_tkn5 WHERE gimbd_tkn6", ' +
+'		"tgt" : "DELETE FROM gimbd_tkn1 AS gimbd_tkn2 <dnl>USING gimbd_tkn3 AS gimbd_tkn4 <dnl>WHERE gimbd_tkn6 <dnl><dnt>AND gimbd_tkn5" '+
+'		}, '	+	
+'		{ ' +
+'		"src" : "DELETE_FROM gimbd_tkn1 USING gimbd_tkn1 AS gimbd_tkn2 INNER_JOIN gimbd_tkn3 AS gimbd_tkn4 ON gimbd_tkn5 (INNER_JOIN|LEFT_OUTER_JOIN|RIGHT_OUTER_JOIN)::gimbd_tkn6 gimbd_tkn7", ' +
+'		"tgt" : "DELETE FROM gimbd_tkn1 AS gimbd_tkn2 <dnl>USING gimbd_tkn3 AS gimbd_tkn4 <dnl>gimbd_tkn6 gimbd_tkn7 <dnl>WHERE gimbd_tkn5" '+
+'		}, '	+	
+'		{ ' +
+'		"src" : "DELETE_FROM gimbd_tkn1 USING gimbd_tkn1 AS gimbd_tkn2 INNER_JOIN gimbd_tkn3 AS gimbd_tkn4 ON gimbd_tkn5 (INNER_JOIN|LEFT_OUTER_JOIN|RIGHT_OUTER_JOIN)::gimbd_tkn6 gimbd_tkn7 WHERE gimbd_tkn8", ' +
+'		"tgt" : "DELETE FROM gimbd_tkn1 AS gimbd_tkn2 <dnl>USING gimbd_tkn3 AS gimbd_tkn4 <dnl>gimbd_tkn6 gimbd_tkn7 <dnl>WHERE gimbd_tkn8 <dnl><dnt>AND gimbd_tkn5" '+
 '		}'	+	
 '	]}' +
 ']';

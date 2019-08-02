@@ -27,7 +27,7 @@ function translateQuery(formObj) {
   		}
 	} 
 	if(mappers == null) {
-		alert("Mapper does not exist for the selection !");
+		alert("Mapper does not exist for the selected source and target DBs !");
 		return false;
 	}
 	
@@ -51,9 +51,26 @@ function translateQuery(formObj) {
 		let prevKeyLength = 0;
 		
 		currValTokens = []; // Reset Data
-		var i = 0
+		var i = 0;
+		
 		for (; tokens[i]; i = i + 2) {
-			startIndex = tempQuery.indexOf(tokens[i]); 
+			if(tokens[i].indexOf('(') == 0) {
+				var options = tokens[i].substring(1, tokens[i].indexOf(')')).split('|');
+				for(var j=0; options[j]; j++) {
+					startIndex = tempQuery.indexOf(options[j]); 
+					if(startIndex > -1) {
+						var optKey =  tokens[i].substring(tokens[i].indexOf('::') + 2);
+						tknIndex = optKey.substring(9);
+						currValTokens[tknIndex] = options[j];
+						tokens[i] = options[j];
+						break;
+					}
+				}
+				console.log(tokens[i] +"<----->"+optKey);
+			} else {
+				startIndex = tempQuery.indexOf(tokens[i]); 
+			}
+			
 			if(startIndex > -1) { // Check Keyword Exists	
 				if(prevKeyLength < 1) {
 					tempQuery = tempQuery.substring(startIndex + tokens[i].length) 
@@ -77,7 +94,7 @@ function translateQuery(formObj) {
 			} else {
 				break;
 			}
-		}
+		} // End Of Token Loop
 		
 		console.log("PrevTokens = "+prevTokens+", CurrentTokens = "+i);
 		if(tokens.length == i && prevTokens < i) {
@@ -88,7 +105,7 @@ function translateQuery(formObj) {
 			tgtPatter = mappers[index].tgt;
 			console.log("Relevant Patter = "+tgtPatter);
 		}
-	}
+	} // End of Pattern Loop
 	
 	if(tgtPatter == null) {
 		alert("No matching query pattern !");
@@ -114,8 +131,12 @@ function translateQuery(formObj) {
 	
 	newQuery = newQuery.replace('<dnt>', '\t');
 	newQuery = newQuery.replace('<dnt>', '\t');
-	newQuery = newQuery.replace('<dnt>', '\t');
-	newQuery = newQuery.replace('<dnt>', '\t');
+	
+	newQuery = newQuery.replace('INNER_JOIN ', 'INNER JOIN ');
+	newQuery = newQuery.replace('LEFT_OUTER_JOIN ', 'LEFT OUTER JOIN ');
+	newQuery = newQuery.replace('RIGHT_OUTER_JOIN ', 'RIGHT OUTER JOIN ');
+	newQuery = newQuery.replace(' NOT_IN ', ' NOT IN ');
+	newQuery = newQuery.replace(' NOT_IN(', ' NOT IN (');
 	
 	formObj.target.value = newQuery;
 }
@@ -124,9 +145,12 @@ function sanitizeQuery(stringTokens, queryString) {
 	console.log(queryString);
 	var srcQuery = queryString.replace(/([\n\r\t\s]+)/g, ' ');
 	srcQuery = srcQuery.replace(' INNER JOIN ', ' INNER_JOIN ');
-	srcQuery = srcQuery.replace(' OUTER JOIN ', ' OUTER_JOIN ');
+	srcQuery = srcQuery.replace(' LEFT OUTER JOIN ', ' LEFT_OUTER_JOIN ');
+	srcQuery = srcQuery.replace(' RIGHT OUTER JOIN ', ' RIGHT_OUTER_JOIN ');
 	srcQuery = srcQuery.replace(' NOT IN ', ' NOT_IN ');
 	srcQuery = srcQuery.replace(' NOT IN(', ' NOT_IN (');
+	srcQuery = srcQuery.replace('DELETE FROM ', 'DELETE_FROM ');
+	
 	
 	tokens = srcQuery.split('');
 	var start = false;
