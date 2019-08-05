@@ -1,7 +1,15 @@
 function selectMigDbs(formObj) {
 	var srcTgt = formObj.dbmigtypes.value.split('-');
-	document.getElementById("srcDB").innerHTML=srcTgt[0];
-	document.getElementById("tgtDB").innerHTML=srcTgt[1];
+	document.getElementById("srcDB").innerHTML = srcTgt[0];
+	document.getElementById("tgtDB").innerHTML = srcTgt[1];
+}
+
+function escapeRegExp(string){
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function replaceAll(str, term, replacement) {
+  	return str.replace(new RegExp(escapeRegExp(term), 'g'), replacement);
 }
 
 function translateQuery(formObj) {
@@ -43,7 +51,6 @@ function translateQuery(formObj) {
 	
 	for (;mappers[index]; index++) {
 		srcPatter = mappers[index].src;
-		console.log("Source Patter = "+srcPatter);
 		tokens = srcPatter.split(' ');
 		let tempQuery =  srcQuery;
 		let startIndex = -1;
@@ -66,7 +73,6 @@ function translateQuery(formObj) {
 						break;
 					}
 				}
-				console.log(tokens[i] +"<----->"+optKey);
 			} else {
 				startIndex = tempQuery.indexOf(tokens[i]); 
 			}
@@ -80,7 +86,7 @@ function translateQuery(formObj) {
 				if(tokens[i-1].startsWith('gimbd_tkn')) {
 					tknIndex = tokens[i-1].substring(9);
 					if(currValTokens[tknIndex] == null) {
-						currValTokens[tknIndex] = tempQuery.substring(0, startIndex);
+						currValTokens[tknIndex] = tempQuery.substring(0, startIndex).trim();
 					} else {
 						if(currValTokens[tknIndex].trim() != tempQuery.substring(0, startIndex).trim()) {
 							break;
@@ -96,14 +102,14 @@ function translateQuery(formObj) {
 			}
 		} // End Of Token Loop
 		
-		console.log("PrevTokens = "+prevTokens+", CurrentTokens = "+i);
+		//console.log("PrevTokens = "+prevTokens+", CurrentTokens = " + i);
 		if(tokens.length == i && prevTokens < i) {
 			prevTokens = i;
 			tknIndex = tokens[i-1].substring(9);
 			currValTokens[tknIndex] = tempQuery;
 			prevValTokens = currValTokens;
 			tgtPatter = mappers[index].tgt;
-			console.log("Relevant Patter = "+tgtPatter);
+			//console.log("Relevant Patter = "+tgtPatter);
 		}
 	} // End of Pattern Loop
 	
@@ -116,41 +122,68 @@ function translateQuery(formObj) {
 	for (var i = 0; i < prevValTokens.length; i++) {
 		if(prevValTokens[i] == null)
 			continue;
-		newQuery = newQuery.replace('gimbd_tkn'+i, prevValTokens[i]);
+		newQuery = replaceAll(newQuery, 'gimbd_tkn'+i, prevValTokens[i]);
 	}
 	
+	// Refill Comments with Tokens
 	for (var i = 0; stringTokens[i]; i++) {
-		newQuery = newQuery.replace('rts_nkt_'+i, '\''+stringTokens[i]+'\'');
+		newQuery = replaceAll(newQuery, 'rts_nkt_'+i, '\''+stringTokens[i]+'\'');
+	}
+	
+	if(newQuery.indexOf('fun_ex<<') > 0)
+		newQuery = evalFunctionExpressions(newQuery);
+		
+	var replacePatterns = ['INNER_JOIN ', 'INNER JOIN ', 
+					'LEFT_OUTER_JOIN ', 'LEFT OUTER JOIN ',
+					'RIGHT_OUTER_JOIN ', 'RIGHT OUTER JOIN ',
+					'NOT_IN ', 'NOT IN ',
+					'NOT_IN(', 'NOT IN ('
+					];
+	
+	for(var i = 0; i < replacePatterns.length; i = i + 2) {
+		newQuery = replaceAll(newQuery, replacePatterns[i], replacePatterns[i + 1]);
 	}
 	
 	// Add Newlines and Tabs
-	newQuery = newQuery.replace('<dnl>', '\n');
-	newQuery = newQuery.replace('<dnl>', '\n');
-	newQuery = newQuery.replace('<dnl>', '\n');
-	newQuery = newQuery.replace('<dnl>', '\n');
-	
-	newQuery = newQuery.replace('<dnt>', '\t');
-	newQuery = newQuery.replace('<dnt>', '\t');
-	
-	newQuery = newQuery.replace('INNER_JOIN ', 'INNER JOIN ');
-	newQuery = newQuery.replace('LEFT_OUTER_JOIN ', 'LEFT OUTER JOIN ');
-	newQuery = newQuery.replace('RIGHT_OUTER_JOIN ', 'RIGHT OUTER JOIN ');
-	newQuery = newQuery.replace(' NOT_IN ', ' NOT IN ');
-	newQuery = newQuery.replace(' NOT_IN(', ' NOT IN (');
+	newQuery = replaceAll(newQuery, '<dnl>', '\n');
+	newQuery = replaceAll(newQuery, '<dnt>', '\t');
 	
 	formObj.target.value = newQuery;
 }
 
-function sanitizeQuery(stringTokens, queryString) {
-	console.log(queryString);
-	var srcQuery = queryString.replace(/([\n\r\t\s]+)/g, ' ');
-	srcQuery = srcQuery.replace(' INNER JOIN ', ' INNER_JOIN ');
-	srcQuery = srcQuery.replace(' LEFT OUTER JOIN ', ' LEFT_OUTER_JOIN ');
-	srcQuery = srcQuery.replace(' RIGHT OUTER JOIN ', ' RIGHT_OUTER_JOIN ');
-	srcQuery = srcQuery.replace(' NOT IN ', ' NOT_IN ');
-	srcQuery = srcQuery.replace(' NOT IN(', ' NOT_IN (');
-	srcQuery = srcQuery.replace('DELETE FROM ', 'DELETE_FROM ');
+function evalFunctionExpressions(query) {
+	var index = 0;
+	var newQuery = '';
+	var closeIndex = 0;
 	
+	while((index = query.indexOf('fun_ex<<')) > -1) {
+		closeIndex = query.indexOf('>>');
+		var parts = query.substring(index + 8, closeIndex).split(',');
+		newQuery = newQuery + query.substring(0, index);
+		
+		if(parts[0] == 'rep') {
+			newQuery = newQuery + replaceAll(parts[1], parts[2]+'.', parts[3]+'.');
+		}
+		
+		query = query.substring(closeIndex + 2);
+	}
+	
+	return newQuery;
+}
+
+function sanitizeQuery(stringTokens, queryString) {
+	var replacePatterns = [' INNER JOIN ', ' INNER_JOIN ', 
+					' LEFT OUTER JOIN ', ' LEFT_OUTER_JOIN ',
+					' RIGHT OUTER JOIN ', ' RIGHT_OUTER_JOIN ',
+					' NOT IN ', ' NOT_IN ',
+					' NOT IN(', ' NOT_IN (',
+					'DELETE FROM ', 'DELETE_FROM '
+					];
+	var srcQuery = queryString.replace(/([\n\r\t\s]+)/g, ' ');
+	
+	for(var i = 0; i < replacePatterns.length; i = i + 2) {
+		srcQuery = replaceAll(srcQuery, replacePatterns[i], replacePatterns[i + 1]);
+	}
 	
 	tokens = srcQuery.split('');
 	var start = false;
