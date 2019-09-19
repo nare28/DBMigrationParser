@@ -4,8 +4,6 @@ import static com.dbmigparser.utils.Constants.BLOCK_LINE;
 import static com.dbmigparser.utils.Constants.TAB_SPACE;
 import static com.dbmigparser.utils.Utility.isConstantVal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,12 +15,12 @@ public class PivotTranslator extends RuleBase {
 	public static final String PG_PIVOT = "(CASE WHEN <col_name> = '<new_col>' THEN <tgt_col> ELSE NULL END) AS ";
 	
 	@Override
-	public List<String> applyRule(List<String> sqlCode) {
-		String sqlQuery = sqlCode.get(0);
-		List<String> newSqlCode = new ArrayList<String>();
+	public String applyRule(int linePos, String sqlQuery) {
 		if(sqlQuery.contains("PIVOT") == false)
 			return null;
+		
 		System.out.println("PivotTranslator :: "+sqlQuery);
+		StringBuffer newQuery = new StringBuffer();
 		int goodPtrnIndex = 0;
 		Pattern pattern = null;
 		Matcher matcher = null;
@@ -95,7 +93,8 @@ public class PivotTranslator extends RuleBase {
 		}
 
 		String[] sg = findSelectAndGroupingCols(actualCols, pivotCols);
-		newSqlCode.add("SELECT " + sg[0]);
+		newQuery.append("SELECT " + sg[0]);
+		newQuery.append(System.lineSeparator());
 
 		String colExp = funName + PG_PIVOT.replace("<col_name>", colName.toLowerCase()).replaceAll("<tgt_col>", targetCol);
 		String pivotCol = null;
@@ -103,14 +102,18 @@ public class PivotTranslator extends RuleBase {
 			pivotCol = pivotCols[k].trim();
 			substr = colExp.replace("<new_col>", pivotCol) + pivotCol;
 			if (k == pivotCols.length - 1)
-				newSqlCode.add(substr);
+				newQuery.append(substr);
 			else
-				newSqlCode.add(substr + ", ");
+				newQuery.append(substr + ", ");
+			newQuery.append(System.lineSeparator());
 		}
-		newSqlCode.add("FROM " + fromTable + " AS s");
-		newSqlCode.add("GROUP BY " + sg[1] + ";");
-		newSqlCode.add(BLOCK_LINE);
-		return newSqlCode;
+		
+		newQuery.append("FROM " + fromTable + " AS s");
+		newQuery.append(System.lineSeparator());
+		newQuery.append("GROUP BY " + sg[1] + ";");
+		newQuery.append(System.lineSeparator());
+		newQuery.append(BLOCK_LINE);
+		return newQuery.toString();
 	}
 
 	private String[] findSelectAndGroupingCols(String[] actualCols, String[] pivotCols) {

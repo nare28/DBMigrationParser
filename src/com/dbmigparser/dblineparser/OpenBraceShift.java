@@ -2,47 +2,37 @@ package com.dbmigparser.dblineparser;
 
 import static com.dbmigparser.utils.Constants.TAB_SPACE;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.dbmigparser.parser.RuleBase;
-import com.dbmigparser.utils.ChangeLog;
 
 public class OpenBraceShift extends RuleBase {
 
 	// Make sure blank space left at end of the keyword
 	public static String[] KEYWORDS = { "CREATE ", "PERFORM ", "SELECT " };
-
+	private String prevChangedLine = null;
+	
 	@Override
-	public List<String> applyRule(List<String> sqlCode) {
-		List<String> newSqlCode = new ArrayList<String>();
-		ChangeLog changes = ChangeLog.getInstance();
-		String line = null;
+	public String applyRule(int linePos, String currLine) {
+		String key = findKeyword(currLine, KEYWORDS);
 		
-		for (int i = 0; i < sqlCode.size(); i++) {
-			line = sqlCode.get(i);
-			String key = findKeyword(line, KEYWORDS);
-			if (key == null) {
-				newSqlCode.add(line);
-			} else if (line.trim().endsWith("(")) {
-				newSqlCode.add(line);
-			} else {
-				String nextLine = sqlCode.get(i + 1);
-				if (nextLine.trim().startsWith("(")) {
-					newSqlCode.add(line + "(");
-					newSqlCode.add(TAB_SPACE + nextLine.replaceFirst("\\(", ""));
-					changes.logChange("Added openbrace on keyword '" + key 
-							+ "' at line # " + (i + 1));
-					i++;
-				} else {
-					newSqlCode.add(line);
-				}
+		if (key != null && currLine.trim().endsWith("(") == false) {
+			String nextLine = getNextLine(linePos);
+			if (nextLine.trim().startsWith("(")) {
+				currLine = currLine + "(";
+				prevChangedLine = TAB_SPACE + nextLine.replaceFirst("\\(", "");
+				changes.logChange("Added openbrace on keyword '" + key + "' at line # " + linePos);
+				return currLine;
 			}
 		}
 		
-		return newSqlCode;
+		if(prevChangedLine != null) {
+			currLine = prevChangedLine;
+			prevChangedLine = null;
+		}
+		
+		return currLine;
 	}
-	
+
+
 	private String findKeyword(String currLine, String[] keys) {
 		for (String key : keys) {
 			if (currLine.trim().startsWith(key))

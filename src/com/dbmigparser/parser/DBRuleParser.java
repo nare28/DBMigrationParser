@@ -1,6 +1,7 @@
 package com.dbmigparser.parser;
 
-import static com.dbmigparser.utils.Constants.FILE_PREFIX;
+import static com.dbmigparser.utils.Constants.DIR_SEP;
+import static com.dbmigparser.utils.Constants.LINE_SEP;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,81 +11,103 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.dbmigparser.utils.ChangeLog;
+import com.dbmigparser.utils.ParserProps;
 
 public abstract class DBRuleParser {
 
-	private ChangeLog changes = null;
-	
+	protected ChangeLog changes = null;
+
 	protected String rulesConfig = null;
-	
+
+	protected ParserProps props = null;
+
 	public DBRuleParser(String rulesConfig) {
 		this.rulesConfig = rulesConfig;
-	}
-	
-	public void process(String srcDirPath, String outDirPath, String fileName) {
-		changes = ChangeLog.getInstance();
-		// If File Name not passed, consider it as directory
-		if (fileName == null) {
-			processDir(new File(srcDirPath), outDirPath);
-		} else {
-			processFile(new File(srcDirPath + fileName), outDirPath);
-		}
-	}
-
-	private void processDir(File dir, String outDirPath) {
-		for (File fl : dir.listFiles()) {
-			// Check for Sub-directories
-			if (fl.isDirectory())
-				processDir(fl, outDirPath);
-			else
-				processFile(fl, outDirPath);
-		}
-	}
-
-	private void processFile(File file, String outDirPath) {
-		changes.logLine();
-		changes.logChange("---- Start Processing ----");
-		changes.logLine();
-		changes.logChange("File # "+file.getAbsolutePath());
-		if (file.exists() == false || file.getName().startsWith(FILE_PREFIX)) {
-			changes.logChange("File not found or invalid");
-			changes.logChange("---- Finished Processing ----");
-			changes.printLog();
-			return;
-		}
-		
-		List<String> sqlCode = applyRules(file);
-		
-		changes.logLine();
-		printNewFile(sqlCode, outDirPath + FILE_PREFIX + file.getName());
-		changes.logLine();
-		changes.logChange("---- Finished Processing ----");
-		changes.logLine();
-		printNewFile(changes.getChanges(), outDirPath + FILE_PREFIX + "change_log.txt");
-//		changes.printLog();
+		props = ParserProps.getInstance();
 	}
 
 	public abstract List<String> applyRules(File file);
-	
-	public void printNewFile(List<String> changes, String outFile) {
+
+	public void process(String srcDirPath, String outDirPath, String fileName) {
+		changes = ChangeLog.getInstance();
+		changes.logLine();
+		changes.logChange("--------------  Start Processing   ---------------");
+		changes.logChange("StartTime::" + new Date());
+		File dir = new File(srcDirPath);
+		if (dir.exists() == false) {
+			System.err.println("Source directory does not exists in system. Given Path # " + srcDirPath);
+			return;
+		}
+		// If File Name not passed, consider it as directory
+		if (fileName == null) {
+			processDir(dir, srcDirPath.length(), null, outDirPath);
+		} else {
+			processFile(new File(srcDirPath + fileName), null, outDirPath);
+		}
+		changes.logChange("EndTime::" + new Date());
+		changes.logChange("------------- Finished Processing ----------------");
+		writeFile(changes.getChanges(), outDirPath + changes.getLogFileName(), true);
+		changes.clear();
+	}
+
+	private void processDir(File dir, int srcDirLength, String subDir, String outDirPath) {
+		for (File fl : dir.listFiles()) {
+			// Check for Sub-directories
+			if (fl.isDirectory())
+				processDir(fl, srcDirLength, fl.getAbsolutePath().substring(srcDirLength), outDirPath);
+			else
+				processFile(fl, subDir, outDirPath);
+		}
+	}
+
+	private void processFile(File file, String subDir, String outDirPath) {
+		changes.logLine();
+		if (file.exists() == false || isValidSubDir(file.getAbsolutePath()) == false
+				|| file.getName().endsWith(".sql") == false) {
+			changes.logChange("File not found or invalid");
+			changes.logLine();
+			return;
+		}
+		
+		changes.logChange("### SQLFile # " + file.getAbsolutePath());
+		changes.logLine();
+		List<String> sqlCode = applyRules(file);
+		changes.logLine();
+		
+		if (subDir != null) {
+			File newDir = new File(outDirPath + subDir);
+			if(newDir.exists() == false)
+				newDir.mkdirs();
+			writeFile(sqlCode, outDirPath + subDir + DIR_SEP + file.getName(), false);
+		} else {
+			writeFile(sqlCode, outDirPath + file.getName(), false);
+		}
+
+		changes.logLine();
+		writeFile(changes.getChanges(), outDirPath + changes.getLogFileName(), true);
+		changes.clear();
+	}
+
+	private void writeFile(List<String> newCode, String outFile, boolean append) {
+		System.out.println(outFile);
 		FileWriter fw = null;
 		BufferedWriter bw = null;
 		try {
-			fw = new FileWriter(outFile);
+			fw = new FileWriter(outFile, append);
 			bw = new BufferedWriter(fw);
-			for(String msg: changes) {
-//				System.out.println(msg);
+			for (String msg : newCode) {
 				bw.write(msg);
-				bw.write(System.lineSeparator());
+				bw.write(LINE_SEP);
 			}
-			
+
 		} catch (FileNotFoundException ex) {
-			logInfo("Failed to write file # " + outFile);
+			changes.logChange("Failed to write file # " + outFile);
 		} catch (IOException ex) {
-			logInfo("Error while writing file # " + outFile);
+			changes.logChange("Error while writing file # " + outFile);
 		} finally {
 			try {
 				bw.close();
@@ -112,9 +135,9 @@ public abstract class DBRuleParser {
 				sqlCode.add(line);
 			}
 		} catch (FileNotFoundException ex) {
-			logInfo("Failed to open file # " + sourceFile);
+			changes.logChange("Failed to open file # " + sourceFile);
 		} catch (IOException ex) {
-			logInfo("Error while reading file # " + sourceFile);
+			changes.logChange("Error while reading file # " + sourceFile);
 		} finally {
 			try {
 				br.close();
@@ -130,8 +153,15 @@ public abstract class DBRuleParser {
 		return sqlCode;
 	}
 
-	protected void logInfo(String text) {
-		System.out.println(text);
+	private boolean isValidSubDir(String absolutePath) {
+		String[] subDirsOnly = props.getSubDirs();
+		if (subDirsOnly == null)
+			return true;
+		for (String subDir : subDirsOnly) {
+			if (absolutePath.contains(subDir))
+				return true;
+		}
+		changes.logChange("Not processing file # " + absolutePath);
+		return false;
 	}
-
 }

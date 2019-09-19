@@ -1,49 +1,45 @@
 package com.dbmigparser.dblineparser;
 
-import static com.dbmigparser.utils.Constants.BLANK;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import com.dbmigparser.parser.RuleBase;
-import com.dbmigparser.utils.ChangeLog;
 
 public class AddNewLines extends RuleBase {
 
+	public AddNewLines() {
+		
+	}
+	
 	@Override
-	public List<String> applyRule(List<String> sqlCode) {
-		List<String> newSqlCode = new ArrayList<String>();
-		ChangeLog changes = ChangeLog.getInstance();
-		int linePos = 1;
-		for (String currLine : sqlCode) {
-			if ("END IF;".equals(currLine.trim())) {
-				newSqlCode.add(currLine);
-				if (sqlCode.get(linePos).length() > 1) {
-					newSqlCode.add(BLANK);
-					changes.logChange("Added new blank after 'END IF;' at line # " + linePos);
-				}
-			} else if ("UNION".equals(currLine.trim()) || "UNION ALL".equals(currLine.trim())) {
-				if (sqlCode.get(linePos - 2).length() > 1) {
-					newSqlCode.add(BLANK);
-					changes.logChange("Added new blank before 'UNION' at line # " + linePos);
-				}
-				newSqlCode.add(currLine);
-				if (sqlCode.get(linePos).length() > 1) {
-					newSqlCode.add(BLANK);
-					changes.logChange("Added new blank after 'UNION;' at line # " + linePos);
-				}
-			} else if (currLine.trim().startsWith("IF ")) {
-				if (sqlCode.get(linePos - 2).length() > 1) {
-					newSqlCode.add(BLANK);
-					changes.logChange("Added new blank before 'IF' at line # " + linePos);
-				}
-				newSqlCode.add(currLine);
+	public String applyRule(int linePos, String currLine) {
+		String newLine = "";
+		String trimLine = currLine.trim();
+		
+		if ("END IF;".equals(trimLine)) {
+			if (getNextLine(linePos).length() > 1) {
+				newLine = currLine + System.lineSeparator();
+				changes.logChange("Added blank line after 'END IF;' at line # " + linePos);
 			} else {
-				newSqlCode.add(currLine);
+				newLine = currLine;
 			}
-			linePos++;
+		} else if ("UNION".equals(trimLine) || "UNION ALL".equals(trimLine)) {
+			if (getNextLine(linePos - 2).length() > 1) {
+				newLine = System.lineSeparator();
+				changes.logChange("Added blank line before 'UNION' at line # " + linePos);
+			}
+			newLine = newLine + currLine;
+			if (getNextLine(linePos).length() > 1) {
+				newLine = newLine + System.lineSeparator();
+				changes.logChange("Added blank line after 'UNION;' at line # " + linePos);
+			}
+		} else if (trimLine.startsWith("IF ")) {
+			if (getNextLine(linePos - 2).length() > 1) {
+				newLine = System.lineSeparator();
+				changes.logChange("Added blank line before 'IF' at line # " + linePos);
+			}
+			newLine = newLine + currLine;
+		} else {
+			newLine = currLine;
 		}
-		return newSqlCode;
+		return newLine;
 	}
 
 }

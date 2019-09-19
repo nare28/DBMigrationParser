@@ -24,28 +24,43 @@ public class QueryConverted {
 						+ "INNER JOIN table_1_b AS b ON a.empid = b.employeeid WHERE b.salart > 999 AND b.dep=10",
 
 				"UPDATE table_2_a SET schedulecount = COALESCE(b.schedulecount, 0) FROM table_2_a AS a "
-						+ "INNER JOIN table_1_b AS b ON a.empid = b.employeeid",
+						+ "INNER JOIN table_2_b AS b ON a.empid = b.employeeid",
 
 				"UPDATE table_3_a SET schedulecount = COALESCE(b.schedulecount, 0), dep = 20 FROM table_3_a AS a "
-						+ "INNER JOIN table_1_b AS b ON a.empid = b.employeeid "
-						+ "INNER JOIN table_1_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL "
+						+ "INNER JOIN table_3_b AS b ON a.empid = b.employeeid "
+						+ "INNER JOIN table_3_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL "
 						+ "WHERE b.salart > 999 AND b.dep=10",
 
 				"UPDATE table_4_a SET schedulecount = COALESCE(b.schedulecount, 0), dep = 20 FROM table_4_a AS a "
-						+ "INNER JOIN table_1_b AS b ON a.empid = b.employeeid "
-						+ "INNER JOIN table_1_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL", };
+						+ "INNER JOIN table_4_b AS b ON a.empid = b.employeeid "
+						+ "INNER JOIN table_4_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL", 
+						
+				"UPDATE table_5_a SET schedulecount = b.schedulecount, dep = 20 FROM table_5_a AS a "
+						+ "INNER JOIN table_5_b AS b ON a.empid = b.employeeid "
+						+ "LEFT OUTER JOIN table_5_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL "
+						+ "WHERE c.empid IS NOT NULL AND a.sal > 10000", 
+						
+				"UPDATE table_5_a SET schedulecount = b.schedulecount, dep = 20 FROM table_5_a AS a "
+						+ "INNER JOIN table_5_b AS b ON a.empid = b.employeeid "
+						+ "LEFT OUTER JOIN table_5_c AS c ON a.empid = c.employeeid AND c.employeeid IS NOT NULL "
+						+ "RIGHT OUTER JOIN table_5_d AS d ON d.empid = c.employeeid AND d.employeeid IS NOT NULL "
+						+ "WHERE c.empid IS NOT NULL AND a.sal > 10000", 
+				
+		};
 
 		String joinTypes = "( INNER JOIN - LEFT JOIN - LEFT OUTER JOIN - RIGHT JOIN - RIGHT OUTER JOIN )";
 
-		String sourcePattern = "UPDATE |#UpdateTable| SET |#SetCmd|( FROM - USING )|#FromTable| AS |#FromAlias|"
-				+ joinTypes + "|#JoinTable| AS |#JoinAlias| ON |#JoinFilter|" + joinTypes
-				+ "|##OtherJoins| WHERE |#WhereFilter";
+		String sourcePattern = "UPDATE $#UpdateTable| SET $#SetCmd|( FROM - USING )$##FromTable| AS $#FromAlias|"
+				+ joinTypes + "$#JoinTable| AS $#JoinAlias| ON $#JoinFilter|" + joinTypes
+				+ "$##OtherJoins| WHERE $#WhereFilter";
 
 		String[] migKeySet = {
-				"##OtherJoins,#FromAlias,#FromTable,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,#WhereFilter,",
-				"#FromAlias,#FromTable,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,#WhereFilter,",
-				"##OtherJoins,#FromAlias,#FromTable,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,",
-				"#FromAlias,#FromTable,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,", };
+				"##FromTable,##OtherJoins,#FromAlias,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,#WhereFilter,",
+				"##FromTable,#FromAlias,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,#WhereFilter,",
+				"##FromTable,##OtherJoins,#FromAlias,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,",
+				"##FromTable,#FromAlias,#JoinAlias,#JoinFilter,#JoinTable,#SetCmd,#UpdateTable,",
+				
+				};
 
 		String[] migrPatterns = {
 				"UPDATE |#UpdateTable| AS |#FromAlias|\n\t|SET |#SetCmd|\n|FROM |#JoinTable|"
@@ -66,6 +81,7 @@ public class QueryConverted {
 		QueryConverted conv = new QueryConverted();
 		for (String query : queries) {
 			tokensMap = conv.parseQuery(query, sourcePattern);
+			System.out.println(tokensMap);
 			conv.findPatternAndMigrate(migKeySet, migrPatterns, tokensMap);
 			System.out.println("-----------------------------------------------------------");
 		}
@@ -79,6 +95,65 @@ public class QueryConverted {
 	}
 
 	private Map<String, String> parseQuery(String query, String fromPattern) {
+		System.out.println("Actual Query ::" + query);
+		String[] queryTokens = fromPattern.split("\\|");
+		Map<String, String> tokensMap = new HashMap<String, String>();
+		String subText = query;
+		String currKeyword = null;
+		int tokenIndex = -1;
+		String prevToken = null;
+		String prevKeyword = null;
+		for (int i = 0; i < queryTokens.length; i++) {
+			String[] oneToken = queryTokens[i].split("\\$");
+			currKeyword = oneToken[0];
+			if (currKeyword.startsWith("(")) { // Find matching keyword from multiple options
+				currKeyword = currKeyword.substring(1, currKeyword.length() - 1);
+				String[] keys = currKeyword.split("-");
+				currKeyword = null;// reset back to null
+				int currIndex = -1;
+				int index = 100;
+				// Find the best keyword match which occurred first
+				for (String k : keys) {
+					currIndex = subText.indexOf(k);
+					if (currIndex > -1 && index > currIndex) {
+						index = currIndex;
+						currKeyword = k;
+					}
+				}
+			}
+			// If Key is not found (i.e null) in Query, do not look for it and value
+			// available in next token.
+			if (currKeyword != null) {
+				tokenIndex = subText.indexOf(currKeyword);
+			} else {
+				tokenIndex = -1;
+			}
+
+			if (tokenIndex == -1) {
+				continue;
+			}
+
+			if (prevToken != null) {
+				String val = subText.substring(0, tokenIndex).trim();
+				if (prevToken.startsWith("##"))
+					val = prevKeyword + " " + val;
+				tokensMap.put(prevToken, val);
+			}
+
+			subText = subText.substring(tokenIndex + currKeyword.length());
+			prevToken = oneToken[1];
+			prevKeyword = currKeyword.trim();
+		}
+
+		if (prevToken.startsWith("##"))
+			subText = prevKeyword + " " + subText;
+
+		tokensMap.put(prevToken, subText);
+
+		return tokensMap;
+	}
+
+	private Map<String, String> parseQuery2(String query, String fromPattern) {
 		String[] tokens = fromPattern.split("\\|");
 		Map<String, String> tokensMap = new HashMap<String, String>();
 		System.out.println("Actual Query ::" + query);
@@ -160,8 +235,7 @@ public class QueryConverted {
 		return tokensMap;
 	}
 
-	private String findPatternAndMigrate(String[] migKeySetMatch, String[] migPatterns,
-			Map<String, String> tokensMap) {
+	private String findPatternAndMigrate(String[] migKeySetMatch, String[] migPatterns, Map<String, String> tokensMap) {
 		Set<String> keySet = tokensMap.keySet();
 		SortedSet<String> sortSet = new TreeSet<String>(keySet);
 		Iterator<String> itr = sortSet.iterator();
@@ -171,7 +245,7 @@ public class QueryConverted {
 		while (itr.hasNext()) {
 			keyText = keyText + itr.next() + ",";
 		}
-//		System.out.println("keyText :: " + keyText);
+		System.out.println("keyText :: " + keyText);
 		String migrPattern = null;
 		for (int i = 0; i < migKeySetMatch.length; i++) {
 			if (migKeySetMatch[i].equals(keyText)) {

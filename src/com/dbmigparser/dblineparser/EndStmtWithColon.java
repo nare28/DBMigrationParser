@@ -25,17 +25,13 @@ public class EndStmtWithColon extends RuleBase {
 			commStrIndex = currLine.indexOf("/*");
 			commEndIndex = currLine.indexOf("*/");
 
-			if (commStrIndex > -1 && commEndIndex > -1) {
-				commStarted = linePos;
-				commEnded = linePos;
-				if (currLine.length() == commEndIndex + 3)
-					exists = (currLine.charAt(commEndIndex + 2) == ';');
-			} else if (commStrIndex > -1) {
+			if (commStrIndex > -1) {
 				if (commStarted > -1)
 					inlineCommCnt++;
 				else
 					commStarted = linePos;
-			} else if (commEndIndex > -1) {
+			} 
+			if (commEndIndex > -1) {
 				if (inlineCommCnt > 0) {
 					inlineCommCnt--;
 				} else {
@@ -43,6 +39,10 @@ public class EndStmtWithColon extends RuleBase {
 					if (currLine.length() == commEndIndex + 3)
 						exists = (currLine.charAt(commEndIndex + 2) == ';');
 				}
+			}
+			if(currLine.trim().startsWith("--") && commStarted == -1) {
+				commStarted = linePos;
+				commEnded = linePos;
 			}
 
 			if (inlineCommCnt == 0) {
@@ -68,6 +68,12 @@ public class EndStmtWithColon extends RuleBase {
 			linePos++;
 		}
 		return newSqlCode;
+	}
+
+	@Override
+	public String applyRule(int linePos, String currLine) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -6,9 +6,11 @@ import com.dbmigparser.dbblockparser.MergeTranslator;
 import com.dbmigparser.dbblockparser.PivotTranslator;
 import com.dbmigparser.dbblockparser.SelfDmlTranslator;
 import com.dbmigparser.dblineparser.AddNewLines;
+import com.dbmigparser.dblineparser.CaseChange;
 import com.dbmigparser.dblineparser.CodeIndentation;
 import com.dbmigparser.dblineparser.EndStmtWithColon;
 import com.dbmigparser.dblineparser.OpenBraceShift;
+import com.dbmigparser.dblineparser.SelectStmtShift;
 import com.dbmigparser.dblineparser.StringReplace;
 import com.dbmigparser.dblineparser.TmpObjRename;
 import com.dbmigparser.dblineparser.WordShiftLeftRight;
@@ -24,7 +26,7 @@ public class RuleEngine {
 		changes = ChangeLog.getInstance();
 	}
 
-	public List<String> execute(List<String> sqlCode) {
+	public List<String> executeLines(List<String> sqlCode) {
 		String[] rules = config.split(";");
 		RuleBase ruleTool = null;
 		for (String rule : rules) {
@@ -33,6 +35,19 @@ public class RuleEngine {
 			changes.logLine();
 			ruleTool = getRuleTool(rule);
 			sqlCode = ruleTool.applyRule(sqlCode);
+		}
+		return sqlCode;
+	}
+	
+	public String executeBlock(String sqlCode) {
+		String[] rules = config.split(";");
+		RuleBase ruleTool = null;
+		for (String rule : rules) {
+			changes.logLine();
+			changes.logChange("Rule Applied # " + rule);
+			changes.logLine();
+			ruleTool = getRuleTool(rule);
+			sqlCode = ruleTool.applyRule(1, sqlCode);
 		}
 		return sqlCode;
 	}
@@ -61,6 +76,12 @@ public class RuleEngine {
 			break;
 		case "add-newlines":
 			ruleTool = new AddNewLines();
+			break;
+		case "case-change":
+			ruleTool = new CaseChange();
+			break;
+		case "select-shift":
+			ruleTool = new SelectStmtShift();
 			break;
 		// Line Parser Rules Ended
 			
