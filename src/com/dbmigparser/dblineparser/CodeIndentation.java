@@ -20,8 +20,7 @@ public class CodeIndentation extends RuleBase {
 
 	@Override
 	public String applyRule(int linePos, String currLine) {
-		if (currLine.trim().startsWith("SELECT ") 
-				&& currLine.length() > MAX_LINE_CHARS) {
+		if (currLine.length() > MAX_LINE_CHARS) {
 			newLinesCount = 1;
 			currLine = generateMultiLines(currLine);
 			changes.logChange("Line split into " + newLinesCount 

@@ -28,7 +28,7 @@ public class AddNewLines extends RuleBase {
 			newLine = newLine + currLine;
 			if (getNextLine(linePos).length() > 1) {
 				newLine = newLine + System.lineSeparator();
-				changes.logChange("Added blank line after 'UNION;' at line # " + linePos);
+				changes.logChange("Added blank line after 'UNION' at line # " + linePos);
 			}
 		} else if (trimLine.startsWith("IF ")) {
 			if (getNextLine(linePos - 2).length() > 1) {

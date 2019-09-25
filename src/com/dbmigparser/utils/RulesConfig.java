@@ -1,18 +1,11 @@
 package com.dbmigparser.utils;
 
-import static com.dbmigparser.utils.Constants.SPACE;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import com.dbmigparser.beans.StrReplaceBean;
 
@@ -25,52 +18,30 @@ public class RulesConfig {
 	List<StrReplaceBean> regexRulesList = null;
 
 	private RulesConfig() {
-		stringRulesList = readConfigs("./resources/sql2pg/strreplacerules.json");
-//		regexRulesList = readConfigs("./resources/sql2pg/dynareplacerules.json");
+		stringRulesList = readConfigs("./resources/sql2pg/strreplacerules.xml");
 	}
 
 	private List<StrReplaceBean> readConfigs(String configFile) {
-		List<StrReplaceBean> rrr = new ArrayList<StrReplaceBean>();
-		try {
-			URL fileName = this.getClass().getClassLoader()
-					.getResource(configFile);
-			StringBuffer fileContent = readFile(fileName.getFile());
-			JSONArray rules = new JSONArray(fileContent.toString());
-			Iterator<Object> itr = rules.iterator();
-			StrReplaceBean bean = null;
-			while (itr.hasNext()) {
-				JSONObject obj = (JSONObject) itr.next();
-				bean = new StrReplaceBean(obj.getString("rulename"), 
-						obj.getString("source"),
-						obj.getString("target"));
-				if(obj.has("search"))
-					bean.setSearch(obj.getString("search"));
-				else
-					bean.setSearch(obj.getString("source"));
-				rrr.add(bean);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return rrr;
-	}
-
-	protected StringBuffer readFile(String sourceFile) {
+		List<StrReplaceBean> rules = new ArrayList<StrReplaceBean>();
 		String line = null;
 		FileReader fr = null;
 		BufferedReader br = null;
-		StringBuffer fileContent = new StringBuffer();
 		try {
-			fr = new FileReader(sourceFile);
+			fr = new FileReader(this.getClass().getClassLoader().getResource(configFile).getFile());
 			br = new BufferedReader(fr);
+			StrReplaceBean bean = null;
 			while ((line = br.readLine()) != null) {
-				fileContent.append(line);
-				fileContent.append(SPACE);
+				bean = new StrReplaceBean();
+				String[] parts = line.split(",");
+				bean.setName(parts[0]);
+				bean.setSource(parts[1]);
+				bean.setTarget(parts[2]);
+				rules.add(bean);
 			}
 		} catch (FileNotFoundException ex) {
-			System.out.println("Failed to open file # " + sourceFile);
+			System.out.println("Failed to open file # " + configFile);
 		} catch (IOException ex) {
-			System.out.println("Error while reading file # " + sourceFile);
+			System.out.println("Error while reading file # " + configFile);
 		} finally {
 			try {
 				br.close();
@@ -83,7 +54,7 @@ public class RulesConfig {
 				e.printStackTrace();
 			}
 		}
-		return fileContent;
+		return rules;
 	}
 
 	public static RulesConfig getInstance() {

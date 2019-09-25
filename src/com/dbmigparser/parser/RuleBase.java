@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.dbmigparser.utils.ChangeLog;
+import com.dbmigparser.utils.ParserProps;
 
 public abstract class RuleBase {
 
@@ -15,10 +16,12 @@ public abstract class RuleBase {
 	private int commEnded = -1;
 	int inlineCommCnt = 0;
 	protected ChangeLog changes = null;
+	protected ParserProps props = null;
 	private List<String> curSqlCode = null;
 
 	protected RuleBase() {
 		changes = ChangeLog.getInstance();
+		props = ParserProps.getInstance();
 	}
 
 	public List<String> applyRule(List<String> curSqlCode) {

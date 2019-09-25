@@ -20,8 +20,7 @@ public class ParserProps {
 			in = this.getClass().getClassLoader().getResourceAsStream("./resources/parser.properties");
 			props.load(in);
 			loadSystemProps();
-
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
 			close(in);
@@ -34,8 +33,8 @@ public class ParserProps {
 		props.put("currentDir", currentDir);
 
 		// Check for Source and Target Directories
-		String prop1 = System.getProperty("sourceDir");
-		String prop2 = System.getProperty("targetDir");
+		String prop1 = System.getProperty("parser.sourceDir");
+		String prop2 = System.getProperty("parser.targetDir");
 
 		if (prop1 == null || prop2 == null) {
 			prop1 = currentDir + DIR_SEP + "Source" + DIR_SEP;
@@ -43,43 +42,43 @@ public class ParserProps {
 			System.err.println("\nMissing source and target dir paths, considering defaults as " 
 					+ prop1 + " and " + prop2);
 		} else {
-			props.put("sourceDir", prop1);
-			props.put("targetDir", prop2);
+			props.put("parser.sourceDir", prop1);
+			props.put("parser.targetDir", prop2);
 		}
 
-		prop1 = System.getProperty("fileName");
+		prop1 = System.getProperty("parser.fileName");
 		if (prop1 != null) {
-			props.put("fileName", prop1);
+			props.put("parser.fileName", prop1);
 		}
 
 		// Check for Source and Target DB Types
-		prop1 = System.getProperty("sourceDB");
-		prop2 = System.getProperty("targetDB");
+		prop1 = System.getProperty("parser.sourceDB");
+		prop2 = System.getProperty("parser.targetDB");
 		if (prop1 != null)
 			props.put("sourceDB", prop1);
 		if (prop2 != null)
 			props.put("targetDB", prop2);
 
 		// Check for Type of Parser to use
-		prop1 = System.getProperty("parser");
+		prop1 = System.getProperty("parser.type");
 
 		if ("block".equals(prop1))
-			props.setProperty("parser", "block");
+			props.setProperty("parser.type", "block");
 		else if ("line".equals(prop1))
-			props.setProperty("parser", "line");
+			props.setProperty("parser.type", "line");
 
-		prop2 = System.getProperty("rulesSet");
+		prop2 = System.getProperty("parser.rulesSet");
 		if (prop2 != null) {
-			if ("block".equals(props.getProperty("parser")))
+			if ("block".equals(props.getProperty("parser.type")))
 				props.setProperty("block.parser.config", prop2);
-			else if ("line".equals(props.getProperty("parser")))
+			else if ("line".equals(props.getProperty("parser.type")))
 				props.setProperty("line.parser.config", prop2);
 		}
-		prop2 = System.getProperty("subDirsOnly");
+		prop2 = System.getProperty("parser.subDirsOnly");
 		if (prop2 != null) {
-			props.setProperty("subDirsOnly", prop2);
+			props.setProperty("parser.subDirsOnly", prop2);
 		}
-		subDirs = props.getProperty("subDirsOnly").split(",");
+		subDirs = props.getProperty("parser.subDirsOnly").split(",");
 
 	}
 

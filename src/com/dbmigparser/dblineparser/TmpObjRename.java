@@ -56,7 +56,7 @@ public class TmpObjRename extends RuleBase {
 			}
 
 			currLine = currLine.replace(tokens[3], newName);
-			changes.logChange("Temp obj name '" + tokens[3] + "' changed to '" + newName + "' at line # " + linePos);
+			changes.logChange("Temp object name '" + tokens[3] + "' changed to '" + newName + "' at line # " + linePos);
 			
 		} else {
 			
@@ -68,11 +68,11 @@ public class TmpObjRename extends RuleBase {
 					k = itr.next();
 					if (currLine.contains(" " + k)) {
 						currLine = currLine.replace(" " + k, " " + tmpObjNames.get(k));
-						changes.logChange("Temp obj name '" + k + "' changed to '" + tmpObjNames.get(k) + "' at line # "
+						changes.logChange("Temp object name '" + k + "' changed to '" + tmpObjNames.get(k) + "' at line # "
 								+ linePos);
 					} else if (currLine.contains("'" + k)) {
 						currLine = currLine.replace(k, tmpObjNames.get(k));
-						changes.logChange("Temp obj name '" + k + "' changed to '" + tmpObjNames.get(k) + "' at line # "
+						changes.logChange("Temp object name '" + k + "' changed to '" + tmpObjNames.get(k) + "' at line # "
 								+ linePos);
 					}
 				}

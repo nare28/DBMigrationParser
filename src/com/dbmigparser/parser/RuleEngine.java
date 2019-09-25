@@ -8,12 +8,13 @@ import com.dbmigparser.dbblockparser.SelfDmlTranslator;
 import com.dbmigparser.dblineparser.AddNewLines;
 import com.dbmigparser.dblineparser.CaseChange;
 import com.dbmigparser.dblineparser.CodeIndentation;
+import com.dbmigparser.dblineparser.DelBlankLines;
 import com.dbmigparser.dblineparser.EndStmtWithColon;
 import com.dbmigparser.dblineparser.OpenBraceShift;
 import com.dbmigparser.dblineparser.SelectStmtShift;
 import com.dbmigparser.dblineparser.StringReplace;
 import com.dbmigparser.dblineparser.TmpObjRename;
-import com.dbmigparser.dblineparser.WordShiftLeftRight;
+import com.dbmigparser.dblineparser.WordShiftLR;
 import com.dbmigparser.utils.ChangeLog;
 
 public class RuleEngine {
@@ -63,7 +64,7 @@ public class RuleEngine {
 			ruleTool = new CodeIndentation();
 			break;
 		case "keyword-shift":
-			ruleTool = new WordShiftLeftRight();
+			ruleTool = new WordShiftLR();
 			break;
 		case "openbrace-shift":
 			ruleTool = new OpenBraceShift();
@@ -82,6 +83,9 @@ public class RuleEngine {
 			break;
 		case "select-shift":
 			ruleTool = new SelectStmtShift();
+			break;
+		case "del-blanklines":
+			ruleTool = new DelBlankLines();
 			break;
 		// Line Parser Rules Ended
 			
